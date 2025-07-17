@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Contact Responses - NGDL Admin Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex">
+  <!-- Sidebar -->
+  <div class="w-64 bg-white shadow-lg">
+    <div class="p-6">
+      <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+        NGDL Admin
+      </h1>
+    </div>
+    <nav class="mt-6">
+      <a href="/dashboard" class="block px-6 py-3 text-gray-700 hover:bg-gray-100 hover:text-blue-600">Dashboard</a>
+      <a href="/products" class="block px-6 py-3 text-gray-700 hover:bg-gray-100 hover:text-blue-600">Products</a>
+      <a href="/blogs" class="block px-6 py-3 text-gray-700 hover:bg-gray-100 hover:text-blue-600">Blogs</a>
+      <a href="/events" class="block px-6 py-3 text-gray-700 hover:bg-gray-100 hover:text-blue-600">Events & News</a>
+      <a href="/careers" class="block px-6 py-3 text-gray-700 hover:bg-gray-100 hover:text-blue-600">Careers</a>
+      <a href="/contacts" class="block px-6 py-3 text-blue-600 bg-blue-50 border-r-2 border-blue-600 font-semibold">Contact Responses</a>
+    </nav>
+  </div>
+
+  <!-- Main Content -->
+  <div class="flex-1 p-8 overflow-auto">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-3xl font-bold text-gray-900">Contact Form Responses</h2>
+      <button id="exportCsvBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all duration-300">
+        Export to CSV
+      </button>
+    </div>
+
+    <table class="min-w-full bg-white rounded-lg shadow-md overflow-hidden">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="py-3 px-6 text-left font-semibold text-gray-700">Name</th>
+          <th class="py-3 px-6 text-left font-semibold text-gray-700">Email</th>
+          <th class="py-3 px-6 text-left font-semibold text-gray-700">Subject</th>
+          <th class="py-3 px-6 text-left font-semibold text-gray-700">Message</th>
+          <th class="py-3 px-6 text-left font-semibold text-gray-700">Date</th>
+          <th class="py-3 px-6 text-center font-semibold text-gray-700">Status</th>
+        </tr>
+      </thead>
+      <tbody id="contactsTableBody" class="divide-y divide-gray-200">
+        <tr><td colspan="6" class="text-center py-6 text-gray-500">Loading contact responses...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const API_BASE_URL = '/api/contact';
+    const contactsTableBody = document.getElementById('contactsTableBody');
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
+
+    async function fetchContacts() {
+      try {
+        const res = await fetch(API_BASE_URL);
+        const data = await res.json();
+        if (data.success) {
+          renderContacts(data.data);
+        } else {
+          contactsTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-red-600">Failed to load contacts</td></tr>';
+        }
+      } catch (error) {
+        contactsTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-red-600">Error loading contacts</td></tr>';
+      }
+    }
+
+    function renderContacts(contacts) {
+      if (contacts.length === 0) {
+        contactsTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-500">No contact responses found</td></tr>';
+        return;
+      }
+      contactsTableBody.innerHTML = contacts.map(contact => `
+        <tr class="border-b border-gray-200 hover:bg-gray-50">
+          <td class="py-3 px-6">${contact.name}</td>
+          <td class="py-3 px-6">${contact.email}</td>
+          <td class="py-3 px-6">${contact.subject}</td>
+          <td class="py-3 px-6 max-w-xs truncate" title="${contact.message}">${contact.message}</td>
+          <td class="py-3 px-6">${new Date(contact.createdAt).toLocaleDateString()}</td>
+          <td class="py-3 px-6 text-center">${contact.status}</td>
+        </tr>
+      `).join('');
+    }
+
+    exportCsvBtn.addEventListener('click', () => {
+      window.open('/export/contacts', '_blank');
+    });
+
+    fetchContacts();
+  </script>
+</body>
+</html>
